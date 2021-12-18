@@ -264,6 +264,12 @@ iterable.forEach((val, index) => {
 
 
 // for of インデックスがとれる
+/** Typescriptだと速度の弱点はない。
+ * TypeScriptを使っていると、ES5への出力の場合型情報を見て、 Array 型の for ... of ループの場合、
+ * 旧来の最速の for ループのJavaScriptコードが生成されるで、速度上のペナルティがまったくない状態で、
+ * 最新の構文が使えるメリットがある。
+ * また、ChromeなどのJavaScriptエンジンの場合は、同一の型の要素だけを含む配列の場合、特別な最適化を行う。
+ */
 for (const[i, value] of iterable.entries())
 {
     console.log(i, value);
@@ -313,3 +319,93 @@ const ReadOnly: readonly number[] = [100, 10, 40, 89];
 
 // 値やリテラルにつける場合
 const ReadOnlyValue = [10, 340, 60] as const;
+
+names[names.length + 1] = "10";
+// コンパイルエラー
+// ReadOnly[ReadOnly.length + 1] = 1;
+// ReadOnlyValue[ReadOnlyValue.length + 1] = 1;
+
+/**
+ * 読み込み専用の配列は普通の変更可能な配列よりは厳しい制約となる。
+ * 変更可能な配列は、readonlyな配列の変数や引数には渡すことができる。
+ * 逆に読み込み専用の配列を変更可能な配列の変数に格納したり関数の引数に渡したりしようとするとエラーになる。
+ */
+
+const ReadOnlyArray: readonly number[] = [1, 2, 3];
+const MutableArray: number[] = [4, 5, 6];
+
+function AcceptMutableArray(num: number[])
+{ }
+
+// OK
+// readonly <- mutable
+const ReadOnlyVar: readonly number[] = MutableArray;
+
+// OK
+// readonly <- readonly
+const ReadOnlyVar2: readonly number[] = ReadOnlyArray;
+
+// NG
+// mutable <- readonly
+// const MutableVar: number[] = ReadOnlyArray;
+
+// OK
+AcceptMutableArray(MutableArray);
+
+// NG
+// AcceptMutableArray(ReadOnlyArray);
+
+/** readonlyを使うかはプロジェクト次第
+ * 内部的には同じ配列なので、型アセーションでキャストすればmutableにできる。
+ * プログラムの安全性が下がる。
+ * 使うか使わないかの二択。
+ * 但し、外部ライブラリは使ってないことのほうが多いので、接点では使わざるを得なくなる。
+ */
+
+const ChangeMutable: number[] = ReadOnlyArray as number[];
+AcceptMutableArray(ReadOnlyArray as number[]);
+
+/** * 配列のようで配列でない、ちょっと配列なオブジェクト
+ * TypeScriptがメインターゲットとしてるブラウザ環境では、配列に似たオブジェクトがある。
+ * HTMLのDOMを操作したときに得られる、HTMLCollectionと、NodeList。
+ * 前者はdocument.formsなどでフォームを取得してきたときにも得られる。
+ * どちらも.lengthで長さが取得でき、インデックスアクセスができるため、一見配列のようだが、
+ * 配列よりもメソッドがかなり少なくなっている。
+ * ・forEach()
+ * NodeList　ある
+ * HTMLCollection　なし
+ * ・map()やsome()
+ * どちらもなし
+ * 
+ * どちらもイテレータは利用できるので下記は使用可。
+ * for .. ofループ
+ * スプレッド構文
+ * Array.from()で配列に変換してから各種配列のメソッドを利用
+ */
+
+/** オブジェクト
+ * オブジェクトは、JavaScriptのコアとなるデータ。
+ * クラスなどを定義しないで、気軽にまとまったデータを扱うときに使う。
+ * オブジェクトへのアクセスは文字列。
+ * キー名が変数などで使える文字だけで構成されている場合、名前をそのまま記述できるが、
+ * 空白文字やマイナスなどを含む場合にはダブルクオートやシングルクオートでくくる。
+ * キー名に変数を書く場合は [ ] でくくる。
+ */
+
+/** usecase
+ * Webサービスのリクエストやレスポンス
+ * 関数のオプショナルな引数
+ * 複数の情報を返す関数
+ * 複数の情報を返す非同期処理
+ */
+
+const key = 'name';
+
+const obj = {
+    [key]: "メジロマックイーン", // keyが変数
+    Height: 159, // 通常
+    'weight- ': "微増（現在必死に調整中）", // -、スペースを含む
+};
+// 参照は、「.名前」もしくは「[名前]」
+console.log(obj.Height);
+console.log(obj[key]);
