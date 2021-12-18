@@ -190,12 +190,12 @@ console.log(nums);
   * なんで3個目から2個目に移動させられたら、2個目と3個目を再度比較してるのかわからん
   * */
 
- umamusumes.sort((a, b) =>{
-     console.log("a: " + a.name + " : " + "b:" + b.name);
-     const bustScore = cmpBust(a.bust, b.bust, a.name, b.name);
-     const nameScore = cmpName(a.name, b.name);
-     return bustScore * 2 + nameScore;
- });
+//  umamusumes.sort((a, b) =>{
+//      console.log("a: " + a.name + " : " + "b:" + b.name);
+//      const bustScore = cmpBust(a.bust, b.bust, a.name, b.name);
+//      const nameScore = cmpName(a.name, b.name);
+//      return bustScore * 2 + nameScore;
+//  });
  console.log(umamusumes);
 
 
@@ -226,3 +226,90 @@ function insertion_sort(array: number[]) {
 insertion_sort(array);​
 
 console.log(array); // [1, 2, 3, 4, 5, 6, 7, 8]​
+
+// 非破壊のソートはないので、元の配列を変更せずにソート後の結果を得る場合、
+// スプレッド構文を使用する。
+const sorted = [...umamusumes].sort((a, b) => a.bust - b.bust);
+console.log(umamusumes);
+console.log(sorted);
+
+/** ループはfor ... ofを使う
+ * ループの書き方は大きくわけて3通りある。
+ * C言語由来のループは昔からあるがループ変数が必要。
+ * forEach()はその後ES5で追加されました。
+ * その後は言語仕様のアップデートとともにfor ... of構文が追加された。
+ * この構文はArray, Set, Map、Stringなどの繰り返し可能（iterable）オブジェクトに対してループする。
+ * 配列の場合で、インデックス値が欲しい場合は、entries()メソッドを使う。
+*/
+
+let iterable: string[] = ["ライスシャワー", 'ミホノブルボン', "マチマチカネタンホイザ"];
+
+
+// C言語由来のループ　最速　※但し、ゲームの1フレームごとに数万要素のループをするケースなど以外は、気にする必要はない。
+for (let i: number = 0; i < iterable.length; i++)
+{
+    let val = iterable[i];
+    console.log(val);
+}
+
+// forEach()
+iterable.forEach(val => {
+    console.log(val);
+});
+
+// forEach() index
+iterable.forEach((val, index) => {
+    console.log(val, index);
+});
+
+
+// for of インデックスがとれる
+for (const[i, value] of iterable.entries())
+{
+    console.log(i, value);
+}
+
+// iterableとイテレーター
+/** entries() indexとvalueのタプルを返すイテレーターを返す。
+ * next()メソッドを持つイテレータオブジェクトを返すメソッド。
+ * nest() -> 配列の要素と、終了したかどうかを、booleanで返す。
+ */
+ const a = ["a", "b", "c"];
+ const b = [[0, "a"], [1, "b"], [2, "c"]];
+ 
+ // この2つの結果は同じ
+ for (const [i, v] of a.entries()) { console.log(i, v); }
+ for (const [i, v] of b) { console.log(i, v); }
+
+ /**
+  * bのような二重配列を作ればイテレータは必要ない。
+  * 要素数が増えると前処理が増える。
+  * イテレータ要素を返すオブジェクトを使って、全コピーを防ぐ。
+  */
+
+/**
+ * オブジェクトにループの要素を取り出すメソッド（@@iterator）があるオブジェクトはiterableなオブジェクト。
+ * 繰り返し処理に対する約束事なので「iterableプロトコル」と呼ばる。
+ * このメソッドはイテレータを返す。
+ * 配列は、 @@iterator 以外にも、 keys() 、 values() 、 entries() と、イテレータを返すメソッドが合計4つある。
+ * for...ofループなどは、このプロトコルにしたがってループを行う。 
+ * 分割代入や、スプレッド構文などがこのiterableプロトコルを土台に提供されている。
+ * Array, Set, Map、String　などのオブジェクトがこのプロトコルを提供している。
+ */
+
+// イテレータはループするときには問題ないが、任意の位置の要素へのアクセスなどは不便。
+// イテレータから配列に変換したい場合は Array.from() メソッドか、スプレッド構文が使える。
+
+let names: string[] = Array.from(iterable);
+names = [...iterable];
+
+/** 読み込み専用の配列
+ * constは再代入をさせないガードにはなるが、変更不可にはできない。
+ * 変更不可にするには、「readonly」もしくはリテラルの後ろに「as const」をつける。
+ */
+
+// 型につける場合
+const ReadOnly: readonly number[] = [100, 10, 40, 89];
+
+// 値やリテラルにつける場合
+const ReadOnlyValue = [10, 340, 60] as const;
