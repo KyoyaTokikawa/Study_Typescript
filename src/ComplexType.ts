@@ -223,7 +223,7 @@ function insertion_sort(array: number[]) {
  }
 }
 
-insertion_sort(array);​
+insertion_sort(array);
 
 console.log(array); // [1, 2, 3, 4, 5, 6, 7, 8]​
 
