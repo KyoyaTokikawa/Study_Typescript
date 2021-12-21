@@ -406,6 +406,168 @@ const obj = {
     Height: 159, // 通常
     'weight- ': "微増（現在必死に調整中）", // -、スペースを含む
 };
+
 // 参照は、「.名前」もしくは「[名前]」
 console.log(obj.Height);
 console.log(obj[key]);
+
+/** JSON
+ * オブジェクトがよく出てくる文脈
+ * データ交換用フォーマット
+ * JavaScriptでネイティブで扱える。
+ * 
+ * JSONをパースすると、オブジェクトと配列で階層構造になったデータができる。
+ * 通信用ライブラリでは、パース済の状態で帰ってきたりする。
+ */
+
+// 最初の引数にオブジェクトや配列、文字列などを入れる
+// 2つめの引数はデータ変換をしたいときの変換関数（ログ出力からパスワードをマスクしたいなど）
+//   省略可能。通常はnull
+// 3つめは配列やオブジェクトでインデントするときのインデント幅
+//   省略可能。省略すると改行なしの1行で出力される
+const json: string = JSON.stringify(obj, null, 2);
+console.log(json);
+// 複製されてでてくる。もとのobjとは別物
+const obj2: string = JSON.parse(json);
+console.log(obj);
+console.log(obj2);
+
+/**
+ * JSONはJavaScript/TypeScriptのオブジェクト定義よりもルールが厳密。
+ * キーは必ずダブルクオートでくくらなければならず、配列やオブジェクトの末尾に不要なカンマがあるとエラー。
+ * その場合はJSON.parse()の中で SyntaxError 例外が発生。
+ * JSONレスポンスを期待しているウェブサービスの時に、サーバー側でエラーが発生して、
+ * Forbidden という文字列が帰ってきた場合（403エラー時のボディ）にも発生。
+ */
+
+/** オブジェクトからデータの取り出し
+ * 分割代入でまとめて取り出せる。
+ * 要素がなかった時に、デフォルト値を設定したり、指定された要素以外のオブジェクトを抜き出すことが可能。
+ * まとめて取り出す場合の変数名は、必ずオブジェクトのキーになる。
+ */
+
+// 旧: 一個ずつ取り出す
+
+var name_mc = obj[key];
+var weight_mc = obj["weight- "];
+// 存在しない場合はデフォルト値を設定 そもそもコンパイル通らん
+// 多分、通信でjson受け取った時用かな
+// var age = obj.age ? obj.age : 3;
+
+// 新: まとめて取り出し。デフォルト値も設定可能
+const smallAnimal = {
+    name_: "小動物",
+    favorite: "小籠包"
+  };
+
+// デフォルト値の設定ができん
+// 新: まとめて取り出し。デフォルト値も設定可能
+// const {name, favorite, age=3} = smallAnimal;
+// 新: name以外の要素の取り出し
+// const {name, ...other} = smallAnimal;
+
+/**
+ * ES2020でオプショナルチェイニングが追加された。
+ * TypeScriptでも3.7から導入された。
+ * TypeScriptでは、変数の型として、文字列だけでなく、場合によっては無効な値としてnullやundefinedが入る可能性がある、
+ * といったバリエーションを持たせることができる。
+ * 例えば次の定義はsmallAnimal自身がオブジェクト、もしくはnullとなりえ、
+ * favoriteというメンバーもundefinedになりえるという意味になる。
+ * この場合、深い階層にアクセスする場合は、一つずつ、nullやundefinedになりえるところでチェックを行っていた。
+ * &&演算子が、一つでも途中にfalseyな値があると評価を止める、
+ * そうでなければ最後の値を返すという挙動を持っているため、それを活用したコーディングが行われていた。
+ * オプショナルチェイニングは同じことを実現する演算子として?.が導入された。
+ * 途中でnullish（nullかundefined）な値があると、式全体の評価結果がundefinedになる。
+ */
+
+// 旧
+var name_: string = obj && obj[key] && obj[key].toUpperCase(); // 大文字を取得
+console.log(name_);
+// 新
+const nmae_2: string = obj?.[key]?.toUpperCase();
+console.log(nmae_2);
+
+// オブジェクト要素の加工
+const Lstspica = [
+    {
+        name: "スペシャルウィーク"
+    },
+    {
+        name: "サイレンススズカ"
+    },
+    {
+        name: "ダイワスカーレット"
+    },
+    {
+        name: "トウカイテイオー"
+    },
+    {
+        name: "メジロマックイーン"
+    }
+];
+
+// これがないと、オブジェクトをforで回せない
+interface StringKeyObject {
+    [Key: string]: string;
+}
+
+const spica: StringKeyObject =
+{
+    name: "スペシャルウィーク"
+}
+const rigil: StringKeyObject = {
+    rival: "グラスワンダー",
+    legtypee: "差し",
+    distance: "マイル"
+};
+
+// 最古
+var MostOldCopy = [{}];
+for (var MostOldkey in Lstspica)
+{
+    if(Lstspica.hasOwnProperty(MostOldkey))
+    {
+        MostOldCopy[MostOldkey] = Lstspica[MostOldkey]
+    }
+}
+console.log(Lstspica);
+console.log(MostOldCopy);
+
+// 旧: Object.assign()
+const OldCopy = Object.assign({}, rigil);
+console.log(OldCopy);
+
+// 新 スプレッド構文
+const NewCopy = {...rigil};
+console.log(NewCopy); // { name: 'グラスワンダー', regtypee: '差し', distance: 'マイル' }
+const [, ...NewCopy_] = [...Lstspica];
+console.log(NewCopy_);
+//   [
+//     { name: 'サイレンススズカ' },
+//     { name: 'ダイワスカーレット' },
+//     { name: 'トウカイテイオー' },
+//     { name: 'メジロマックイーン' }
+//   ]
+const Copy_Train = [...Lstspica.slice(0,2),...Lstspica.slice(3, 4)];
+console.log(Copy_Train); //[ { name: 'スペシャルウィーク' }, { name: 'サイレンススズカ' }, { name: 'トウカイテイオー' } ]
+
+console.log("merged");
+// オブジェクトをマージ
+var merged: StringKeyObject = {};
+for (var key1 in spica)
+{
+    if(spica.hasOwnProperty(key1))
+    {
+        merged[key1] = spica[key1]
+    }
+}
+
+for (var key2 in rigil)
+{
+    if(rigil.hasOwnProperty(key2))
+    {
+        merged[key2] = rigil[key2];
+    }
+}
+console.log(merged);
+
