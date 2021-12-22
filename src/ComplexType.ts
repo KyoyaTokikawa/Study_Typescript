@@ -552,13 +552,13 @@ const Copy_Train = [...Lstspica.slice(0,2),...Lstspica.slice(3, 4)];
 console.log(Copy_Train); //[ { name: 'スペシャルウィーク' }, { name: 'サイレンススズカ' }, { name: 'トウカイテイオー' } ]
 
 console.log("merged");
-// オブジェクトをマージ
-var merged: StringKeyObject = {};
+//最古: オブジェクトをマージ
+var MostOldMerged: StringKeyObject = {};
 for (var key1 in spica)
 {
     if(spica.hasOwnProperty(key1))
     {
-        merged[key1] = spica[key1]
+        MostOldMerged[key1] = spica[key1]
     }
 }
 
@@ -566,8 +566,86 @@ for (var key2 in rigil)
 {
     if(rigil.hasOwnProperty(key2))
     {
-        merged[key2] = rigil[key2];
+        MostOldMerged[key2] = rigil[key2];
     }
 }
-console.log(merged);
+console.log(MostOldMerged);
 
+// 旧: Object.assign()
+const Oldmerged = Object.assign({}, spica, rigil);
+console.log(Oldmerged);
+
+// 新: スプレッド構文
+const NewMerged = {...spica, ...rigil};
+console.log(NewMerged);
+
+/**DictionaryはオブジェクトではなくMapを使う
+ * ES2015で、単なる配列以外にも、Map/Setなどが増えた。
+ * 子供のデータをフラットにたくさん入れられるデータ構造。
+ * 配列と同じiterableなので、同じ流儀でループ可能。
+ * 古のコードはオブジェクトを、他言語の辞書やハッシュのようにつかっていたが、今時はMapを使う。
+ * 他の言語のようにリテラルで簡単に初期化できない。
+ * キーと値を簡単に取り出してループでき、キーだけでループ（for (const key of map.keys())）,
+ * 値だけでループ（for (const value of map.values())）も使える。
+ * キーにnumberも使える。
+ * オブジェクトは、データベースでいうところのレコード（1つのオブジェクトはいつも固定の名前がある）として使い、
+ * Map はキーが可変の連想配列で、値の型が常に一定というケースで使うと良い。
+ * WeakMapや WeakSetという弱参照のキャッシュに使えるコレクションもあり、
+ * ブラウザで使えるウェブアクセスのFetchAPIのHeadersクラスも似たAPIを提供している。
+*/
+
+// 旧: オブジェクトを辞書代わりにする
+var OldDic: StringKeyObject = {
+    "スぺ": "長距離",
+    "グラス": "中距離"
+};
+
+for (var Key in OldDic)
+{
+    console.log(Key);
+    if(OldDic.hasOwnProperty(key))
+    {
+        console.log(Key + ":" + OldDic[Key]);
+    }
+}
+
+// 新: Mapを利用
+// ``<キーの型、 値の型>`` で明示的に型を指定すると
+// ``set()`` 時に型違いのデータを入れようとするとチェックでき、
+// ループなどで値を取り出しても型情報が維持される
+
+const map = new Map<number, StringKeyObject>([
+    [1, {name: "スペシャルウィーク"}],
+    [2, {name: "グラスワンダー"}],
+    [3, {name: "キングヘイロー"}],
+    [5, {name: "セイウンスカイ"}],
+    [4, {name: "エルコンドルパサー"}]
+]);
+
+for (const [Key, value] of map)
+{
+    console.log(`${Key} : ${value.name}`);
+}
+
+/**読み込み専用のオブジェクト
+ * readonlyキーワードではなく、型ユーティリティのReadonly<>を使う。
+ * 型を定義しておく必要がある。
+ * フィールドごとにreadonlyを付与することも可能。
+ * あるいは、型ではなく、値の最後にas constを付与する。
+*/
+
+type User = {
+    name: string;
+    legtype: string;
+}
+
+const U: Readonly<User> = {name: "グラスワンダー", legtype: "mile"};
+const R = {name: "グラスワンダー", legtype: "mile"} as const;
+// NG
+// R.legtype = "long";
+
+/**まとめ
+ * Javaと比べると、TypeScriptで実装する場合、同じようなものを実装する場合にもクラス定義の数は減る。
+ * ちょっとしたデータを格納するデータ構造などは、これらの型を使って定義なしで使うことが多い。
+ * TypeScriptを使えば、型推論やインラインでの明示的な型定義によって、これらの型でもきちんとしたチェックが行われるようになる。
+*/
